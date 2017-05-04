@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
+
+<Configure class="org.eclipse.jetty.server.Server">
+
+  <Call name="addConnector">
+    <Arg>
+      <New class="org.eclipse.jetty.server.nio.SelectChannelConnector">
+        <Set name="host">
+          <SystemProperty name="jetty.host" />
+        </Set>
+        <Set name="port">
+          <SystemProperty name="jetty.port" default="80" />
+        </Set>
+        <Set name="requestHeaderSize">16384</Set>
+        <!-- for mod_proxy -->
+        <!--
+        <Set name="forwarded">true</Set>
+        -->
+      </New>
+    </Arg>
+  </Call>
+
+  <New id="scm-webapp" class="org.eclipse.jetty.webapp.WebAppContext">
+    <Set name="contextPath">/scm</Set>
+    <Set name="war"><SystemProperty name="basedir" default="."/>/var/webapp/scm-webapp.war</Set>
+    <!-- disable directory listings -->
+    <Call name="setInitParameter">
+      <Arg>org.eclipse.jetty.servlet.Default.dirAllowed</Arg>
+      <Arg>false</Arg>
+    </Call>
+    <Set name="tempDirectory">
+      <SystemProperty name="basedir" default="."/>/work
+    </Set>
+  </New>
+
+  <New id="docroot" class="org.eclipse.jetty.webapp.WebAppContext">
+    <Set name="contextPath">/</Set>
+    <Set name="baseResource">
+      <New class="org.eclipse.jetty.util.resource.ResourceCollection">
+        <Arg>
+          <Array type="java.lang.String">
+            <Item><SystemProperty name="basedir" default="."/>/var/webapp/docroot</Item>
+          </Array>
+        </Arg>
+      </New>
+    </Set>
+    <Set name="tempDirectory">
+      <SystemProperty name="basedir" default="."/>/work
+    </Set>
+  </New>
+  
+  <Set name="handler">
+    <New class="org.eclipse.jetty.server.handler.HandlerCollection">
+      <Set name="handlers">
+        <Array type="org.eclipse.jetty.server.Handler">
+          <Item>
+            <Ref id="scm-webapp" />
+          </Item>
+          <Item>
+            <Ref id="docroot" />
+          </Item>
+          <!--
+          <Item>
+            <New id="RequestLog" class="org.eclipse.jetty.server.handler.RequestLogHandler"/>
+          </Item>
+          -->
+        </Array>
+      </Set>
+    </New>
+  </Set>
+  
+  <!-- SSL-Connector -->
+  <!--
+     Documentation for the SSL-Connector: 
+     http://wiki.eclipse.org/Jetty/Reference/SSL_Connectors
+  -->
+  <!--
+  Besure SSLv3 protocol is excluded to avoid POODLE vulnerability.
+  See https://groups.google.com/d/msg/scmmanager/sX_Ydy-wAPA/-Dvs5i7RHtQJ
+  -->
+  <!--
+  <Call name="addConnector">
+    <Arg>
+      <New class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
+        <Arg>
+          <New class="org.eclipse.jetty.http.ssl.SslContextFactory">
+            <Set name="excludeProtocols">
+              <Array type="java.lang.String">
+                <Item>SSLv2Hello</Item>
+                <Item>SSLv3</Item>
+              </Array>
+            </Set>
+          </New>
+        </Arg>
+        <Set name="Port">8181</Set>
+        <Set name="maxIdleTime">30000</Set>
+        <Set name="requestHeaderSize">16384</Set>
+        <Set name="keystore"><SystemProperty name="basedir" default="." />/conf/keystore.jks</Set>
+        <Set name="password">OBF:xxx</Set>
+        <Set name="keyPassword">OBF:xxx</Set>
+        <Set name="truststore"><SystemProperty name="basedir" default="." />/conf/keystore.jks</Set>
+        <Set name="trustPassword">OBF:xxx</Set>
+      </New>
+    </Arg>
+  </Call>
+  -->
+
+</Configure>
+
